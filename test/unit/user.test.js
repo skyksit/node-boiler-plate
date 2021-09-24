@@ -1,8 +1,12 @@
 const userController = require("../../controller/users")
 const userModel = require("../../models/User")
 const httpMocks = require("node-mocks-http")
+const newUser = require("../data/new-user.json")
 
 let req, res, next
+
+userModel.create = jest.fn()
+userModel.findOne = jest.fn()
 
 beforeEach(() => {
   req = httpMocks.createRequest()
@@ -10,8 +14,62 @@ beforeEach(() => {
   next = jest.fn()
 })
 
-describe("User Controller", () => {
-  it("should have a createUser function", () => {
+describe("User Create", () => {
+  beforeEach(() => {
+    req.body = newUser
+  })
+  it("When create user, should have a createUser function", () => {
     expect(typeof userController.createUser).toBe("function")
+  })
+
+  it("When call controller create, Should call model.createUser", async () => {
+    //Act
+    await userController.createUser(req, res, next)
+    //Assert
+    expect(userModel.create).toBeCalledWith(newUser)
+  })
+
+  it("When the User is successfully created, Should return a 201", async () => {
+    //Act
+    await userController.createUser(req, res, next)
+    //Assert
+    expect(res.statusCode).toBe(201)
+    expect(res._isEndCalled()).toBeTruthy()
+  })
+
+  it("When the User is successfully created, Should Return json body in response", async () => {
+    //Arrange
+    userModel.create.mockReturnValue(newUser)
+    //Act
+    await userController.createUser(req, res, next)
+    //Assert
+    expect(res._getJSONData()).toStrictEqual({ success: true })
+  })
+
+  it("When User creation fails, Should handle errors", async () => {
+    //Arrange
+    const errorMessage = { message: "name property missing" }
+    const rejectedPromise = Promise.reject(errorMessage)
+    userModel.create.mockReturnValue(rejectedPromise)
+    //Act
+    await userController.createUser(req, res, next)
+    //Assert
+    expect(next).toBeCalledWith(errorMessage)
+  })
+})
+
+describe("User login", () => {
+  beforeEach(() => {
+    req.body = newUser
+  })
+  it("When login user, should have a login function", () => {
+    expect(typeof userController.login).toBe("function")
+  })
+
+  it("When call controller login, Should call model.findOne", async () => {
+    //Act
+    await userController.login(req, res, next)
+    //Assert
+    expect(userModel.findOne).toBeCalledWith(newUser)
   })
 })
