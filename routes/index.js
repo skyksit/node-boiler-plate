@@ -1,9 +1,9 @@
-const express = require("express")
-const router = express.Router()
-const userRoute = require("./user.route")
-const loginRoute = require("./login.route")
+const staticRoutes = require("./static.route")
+const userRoutes = require("./user.route")
 
-router.use("/api/register", userRoute)
-router.use("/api/user", loginRoute)
+const initRoutes = (app) => {
+  app.use("/", staticRoutes)
+  app.use("/auth", userRoutes)
+}
 
-module.exports = router
+module.exports = initRoutes

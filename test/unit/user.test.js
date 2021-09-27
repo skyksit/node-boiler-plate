@@ -1,4 +1,5 @@
-const userController = require("../../controller/users")
+const userController = require("../../controllers/users")
+const staticController = require("../../controllers/static")
 const userModel = require("../../models/User")
 const httpMocks = require("node-mocks-http")
 const newUser = require("../data/new-user.json")
@@ -14,24 +15,34 @@ beforeEach(() => {
   next = jest.fn()
 })
 
-describe("User Create", () => {
+describe("Welcome Page", () => {
+  it("When api root access, Should have a Welcome message", async () => {
+    //Act
+    await staticController.index(req, res)
+    //Assert
+    expect(res.statusCode).toBe(200)
+    expect(res._getData()).toStrictEqual("Welcome to Node.js + MongoDB API")
+  })
+})
+
+describe("User Register", () => {
   beforeEach(() => {
     req.body = newUser
   })
   it("When create user, should have a createUser function", () => {
-    expect(typeof userController.createUser).toBe("function")
+    expect(typeof userController.register).toBe("function")
   })
 
   it("When call controller create, Should call model.createUser", async () => {
     //Act
-    await userController.createUser(req, res, next)
+    await userController.register(req, res, next)
     //Assert
     expect(userModel.create).toBeCalledWith(newUser)
   })
 
   it("When the User is successfully created, Should return a 201", async () => {
     //Act
-    await userController.createUser(req, res, next)
+    await userController.register(req, res, next)
     //Assert
     expect(res.statusCode).toBe(201)
     expect(res._isEndCalled()).toBeTruthy()
@@ -41,7 +52,7 @@ describe("User Create", () => {
     //Arrange
     userModel.create.mockReturnValue(newUser)
     //Act
-    await userController.createUser(req, res, next)
+    await userController.register(req, res, next)
     //Assert
     expect(res._getJSONData()).toStrictEqual({ success: true })
   })
@@ -52,7 +63,7 @@ describe("User Create", () => {
     const rejectedPromise = Promise.reject(errorMessage)
     userModel.create.mockReturnValue(rejectedPromise)
     //Act
-    await userController.createUser(req, res, next)
+    await userController.register(req, res, next)
     //Assert
     expect(next).toBeCalledWith(errorMessage)
   })
@@ -60,6 +71,7 @@ describe("User Create", () => {
 
 describe("User login", () => {
   beforeEach(() => {
+    //Arrange
     req.body = newUser
   })
   it("When login user, should have a login function", () => {
@@ -67,9 +79,12 @@ describe("User login", () => {
   })
 
   it("When call controller login, Should call model.findOne", async () => {
+    //Arrange
+    let findUser = { email: "skyksit@gmail.com" }
+    userModel.findOne.mockReturnValue(findUser)
     //Act
     await userController.login(req, res, next)
     //Assert
-    expect(userModel.findOne).toBeCalledWith(newUser)
+    expect(userModel.findOne).toBeCalledWith(findUser, expect.any(Function))
   })
 })

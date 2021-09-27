@@ -1,19 +1,17 @@
 const express = require("express")
 const app = express()
-const routes = require("./routes")
+const initRoutes = require("./routes")
 
 app.use(express.json())
 
-app.get("/", (req, res) => {
-  res.send("Hello World!")
-})
-
-//요청이 오면 routes/index.js 로 보내준다
-app.use("/", routes)
+// Routes
+initRoutes(app)
 
 //express error handler
-app.use((error, req, res, next) => {
-  res.status(500).json({ message: error.message })
+app.use((req, res, next) => {
+  const err = new Error("The requested url was not found on this server")
+  err.status = 404
+  next(err)
 })
 
 module.exports = app
